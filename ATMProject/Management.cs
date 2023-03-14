@@ -53,6 +53,7 @@ namespace ATMProject
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
         {
             ATM atm = new ATM();
+            atm.Size = new Size(900, 600);
             atm.Show();
 
         }

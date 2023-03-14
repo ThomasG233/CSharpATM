@@ -34,20 +34,48 @@ namespace ATMProject
 
         public void drawATM()
         {
-            Button[,] btnKeyPad = new Button[3,3];
+            this.BackColor = Color.LightGray;
+            Button[,] btnKeyPad = new Button[3,4];
             int i = 0;
-            for (int y = 0; y < 3; y++)
+            for (int y = 0; y < 4; y++)
             {
                 for (int x = 0; x < 3; x++)
                 {
-                    btnKeyPad[x,y] = new Button();
+                    btnKeyPad[x, y] = new Button();
                     i++;
-                    btnKeyPad[x,y].SetBounds(100 + (50 * x), 100 + (50 * y), 50, 50);
-                    btnKeyPad[x,y].Text = Convert.ToString(i);
+                    btnKeyPad[x, y].SetBounds(650 + (75 * x), 100 + (75 * y), 75, 75);
+                    btnKeyPad[x, y].Font = new Font("Arial", 24, FontStyle.Bold);
+                    btnKeyPad[x, y].Text = Convert.ToString(i);
+                    btnKeyPad[x,y].BackColor = Color.White;
                     Controls.Add(btnKeyPad[x, y]);
                 }
-
             }
+            btnKeyPad[0, 3].Font = new Font("Arial", 12, FontStyle.Bold);
+            btnKeyPad[0, 3].BackColor = Color.Yellow;
+            btnKeyPad[0, 3].Text = "Cancel";
+            btnKeyPad[1, 3].Text = "0";
+            btnKeyPad[2, 3].Font = new Font("Arial", 12, FontStyle.Bold);
+            btnKeyPad[2, 3].BackColor = Color.Green;
+            btnKeyPad[2, 3].Text = "Enter";
+
+            Button[,] btnMenu = new Button[1, 3];
+            int j = 0;
+            for (int y = 0; y < 3; y++)
+            {
+                btnMenu[0, y] = new Button();
+                btnMenu[0, y].SetBounds(8, 100 + (125 * j), 100, 50);
+                btnMenu[0,y].BackColor = Color.White;
+                j++;
+                Controls.Add(btnMenu[0, y]);
+            }
+
+            Panel pnlScreen = new Panel();
+            pnlScreen.BackColor = Color.Black;
+            pnlScreen.SetBounds(115, 50, 525, 400);
+            Controls.Add(pnlScreen);
+
+
+
         }
         private void ATM_Load(object sender, EventArgs e)
         {
