@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ATMProject;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,24 +9,44 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
+
 namespace ATMProject
 {
     public partial class Management : Form
     {
-        RichTextBox rtxtAccessLog = new RichTextBox();
-        Account[] ac = new Account[3];
+        
+        RichTextBox rTxtAccessLog = new RichTextBox();
+        public Account[] ac = new Account[3];
 
-        public Management()
+        public Account[] AccountCreation()
         {
             ac[0] = new Account(300, 1111, 111111);
             ac[1] = new Account(750, 2222, 222222);
             ac[2] = new Account(3000, 3333, 333333);
+            return ac;
+        }
+        /*public static ArtworkData[] GetDataRecords(int UsersID{
+        ArtworkData[] Labels;
+        Labels = new ArtworkData[3];
+        return Labels;}
+         * 
+         */
+
+        public Management()
+        {
             InitializeComponent();
+        }
+
+        public void addToAccessLog()
+        {
+
         }
         
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            AccountCreation();
             drawManagementScreen();
         }
 
@@ -41,13 +62,11 @@ namespace ATMProject
                 lblAccount[i].SetBounds(this.Width/2 - 100, 10 + (20 * (i + 1)), 300, 20);
                 Controls.Add(lblAccount[i]);
             }
-
-
             
-            rtxtAccessLog.SetBounds(10, 100, this.Width - 35, this.Height - 150);
-            rtxtAccessLog.ReadOnly = true;
+            rTxtAccessLog.SetBounds(10, 100, this.Width - 35, this.Height - 150);
+            rTxtAccessLog.ReadOnly = true;
 
-            Controls.Add(rtxtAccessLog);
+            Controls.Add(rTxtAccessLog);
         }
 
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
@@ -68,8 +87,12 @@ namespace ATMProject
             Close();
         }
     }
-
-    class Account
+    /**
+     *  ac[0] = new Account(300, 1111, 111111);
+            ac[1] = new Account(750, 2222, 222222);
+            ac[2] = new Account(3000, 3333, 333333);
+     */
+    public class Account
     {
         //the attributes for the account
         private int balance;
