@@ -14,7 +14,11 @@ namespace ATMProject
     public partial class ATM : Form
     {
         bool accNumberInserted = false;
+        bool invalidDataPreviouslyEntered = false;
         bool onAccountScreen = false;
+
+        // Holds reference to accounts from Management.
+        Account[] ac = null;
 
         TextBox txtCardInputs = new TextBox();
         Label lblInstruction = new Label();
@@ -23,16 +27,24 @@ namespace ATMProject
 
         Button[] btnSideMenu = new Button[3];
             
-
+        // Basic constructor (required).
         public ATM()
         {
             InitializeComponent();
             drawATM();
             displayInitialATMScreen();
-            Thread th = Thread.CurrentThread;
+            // Thread th = Thread.CurrentThread;
 
             // ThreadExceptionDialog thread1 = new Thread(increment);
             // thread1.Start();
+        }
+        // Constructor to pass in accounts.
+        public ATM(Account[] accounts)
+        {
+            ac = accounts;
+            InitializeComponent();
+            drawATM();
+            displayInitialATMScreen();
         }
 
         public void increment()
@@ -43,7 +55,7 @@ namespace ATMProject
                 Thread.Sleep(1000);
             }
         }
-
+        // Draw the ATM UI.
         public void drawATM()
         {
             this.BackColor = Color.LightGray;
@@ -91,6 +103,9 @@ namespace ATMProject
                 Controls.Add(btnSideMenu[y]);
             }
 
+            btnSideMenu[0].Click += new EventHandler(BtnSideTop_Click);
+            btnSideMenu[1].Click += new EventHandler(BtnSideMid_Click);
+            btnSideMenu[2].Click += new EventHandler(BtnSideBottom_Click);
 
             Panel pnlScreen = new Panel();
             pnlScreen.BackColor = Color.Black;
@@ -104,6 +119,55 @@ namespace ATMProject
             pnlCardReader.SetBounds(655, 410, 215, 5);
             Controls.Add(pnlCardReader);
         }
+
+        public void BtnSideTop_Click(object sender, EventArgs e)
+        {
+            // Withdraw some cash
+            if(onAccountScreen)
+            {
+
+            }
+        }
+
+        public void BtnSideMid_Click(object sender, EventArgs e)
+        {
+            // View account balance.
+            if(onAccountScreen)
+            {
+                clearATMScreen();
+
+            }
+        }
+        public void BtnSideBottom_Click(object sender, EventArgs e)
+        {
+            // Remove card
+            if(onAccountScreen)
+            {
+
+            }
+        }
+
+        public void showWithdrawalScreen()
+        {
+
+        }
+
+        public void showBalanceScreen()
+        {
+
+        }
+
+        private void ATM_Click1(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void ATM_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        // Event handler for when a number on the keypad is pressed.
         public void BtnKeyPad_Click(object sender, EventArgs e)
         {
             // If an account number is currently being inserted.
@@ -117,46 +181,89 @@ namespace ATMProject
                 txtCardInputs.Text += Convert.ToString(((Button)sender).Text);
             }
         }
-
+        // Event handler for the cancel button.
         public void BtnCancel_Click(object sender, EventArgs e)
         {
+            // Remove a number from the input box.
             if ((txtCardInputs.Text).Length > 0)
             {
                 txtCardInputs.Text = (txtCardInputs.Text).Remove((txtCardInputs.Text).Length - 1);
             }
+            // Cancel, closes ATM system.
             else if ((txtCardInputs.Text).Length == 0)
             {
                 Close();
             }
         }
-
+        // Event handler for the enter button.
         public void BtnEnter_Click(object sender, EventArgs e)
         {
-            if (accNumberInserted == false)
+            // If the account number is being asked for
+            if (!accNumberInserted)
             {
+                // Account number must be 6 numbers.
                 if ((txtCardInputs.Text).Length == 6)
                 {
+                    // Save the account number, prompt the user for their pin.
                     lblInstruction.Text = "Enter your PIN Number:";
                     accountNumber = txtCardInputs.Text;
                     txtCardInputs.Text = "";
                     accNumberInserted = true;
                 }
             }
-            else
+            // Pin Number is being inserted.
+            else if(accNumberInserted)
             {
+                bool dataValidated = false;
+                // Pin number must be 4 numbers.
                 if ((txtCardInputs.Text).Length == 4)
                 {
+                    // Save the pin number.
                     pinNumber = txtCardInputs.Text;
                     txtCardInputs.Text = "";
-                    txtCardInputs.Hide();
-                    
+                    // Check each account on file.
+                    for (int i = 0; i < 3; i++)
+                    {
+                        // If the account number exists.
+                        if (ac[i].getAccountNum() == Convert.ToInt32(accountNumber))
+                        {
+                            // If the pin number is valid.
+                            if (ac[i].checkPin(Convert.ToInt32(pinNumber)))
+                            {
+                                // Account is valid, display account screen.
+                                dataValidated = true;
+                                txtCardInputs.Hide();
+                                clearATMScreen();
+                                displayAccountOptionsScreen();
+                            }
+                            else
+                            {
+                                // Pin invalid, stop checking.
+                                break;
+                            }
+                        }    
+                    }
+                }
+                // If the account number/pin is incorrect.
+                if(!dataValidated)
+                {
+                    // Reset and inform the user of incorrect details.
+                    invalidDataPreviouslyEntered = true;
+                    accNumberInserted = false;
+                    accountNumber = "";
+                    pinNumber = "";
+                    // Prompt the user to re-enter.
                     clearATMScreen();
-                    displayAccountOptionsScreen();
+                    displayInitialATMScreen();
                 }
             }
         }
+        // Screen for Account Options.
         public void displayAccountOptionsScreen()
         {
+            // Enables the side buttons.
+            onAccountScreen = true;
+            // Instruction Label.
             lblInstruction.Text = "Welcome, " + accountNumber + ".";
             lblInstruction.ForeColor = Color.Red;
             lblInstruction.Font = new Font("Arial", 30, FontStyle.Bold);
@@ -164,7 +271,7 @@ namespace ATMProject
             Controls.Add(lblInstruction);
             lblInstruction.BringToFront();
 
-
+            // Menu options.
             Label[] lblOptions = new Label[3];
             for (int i = 0; i < 3; i++)
             {
@@ -180,19 +287,22 @@ namespace ATMProject
             lblOptions[1].Text = "Check your total balance.";
             lblOptions[2].Text = "Remove card.";
         }
-
+        // Clear the ATM screen.
         public void clearATMScreen()
         {
+            // Remove all labels.
             foreach (var labels in Controls.OfType<Label>().ToList())
             {
                 Controls.Remove(labels);
             }
+            // Remove all images.
             foreach (var images in Controls.OfType<PictureBox>().ToList())
             {
                 Controls.Remove(images);
             }
         }
 
+        // Display the first ATM screen.
         public void displayInitialATMScreen()
         {
             Label lblTop = new Label();
@@ -213,7 +323,7 @@ namespace ATMProject
             picUoD.BackColor = Color.Black;
             Controls.Add(picUoD);
             picUoD.BringToFront();
-
+            
 
             lblInstruction.Text = "Enter your Account Number:";
             lblInstruction.ForeColor = Color.Tomato;
@@ -224,6 +334,20 @@ namespace ATMProject
             
             Controls.Add(lblInstruction);
             lblInstruction.BringToFront();
+
+            // Prompt displayed if previous attempt was incorrect.
+            if(invalidDataPreviouslyEntered)
+            {
+                Label lblError = new Label();
+                lblError.Text = "Invalid Account Number or PIN.";
+                lblError.ForeColor = Color.Red;
+                lblError.BackColor = Color.Black;
+                lblError.Font = new Font("Arial", 15, FontStyle.Bold);
+                lblError.TextAlign = ContentAlignment.MiddleCenter;
+                lblError.SetBounds(110, 315, 500, 25);
+                Controls.Add(lblError);
+                lblError.BringToFront();
+            }
 
             txtCardInputs.SetBounds(302, 375, 125, 100);
             txtCardInputs.ReadOnly = true;

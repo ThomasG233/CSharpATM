@@ -26,12 +26,6 @@ namespace ATMProject
             ac[2] = new Account(3000, 3333, 333333);
             return ac;
         }
-        /*public static ArtworkData[] GetDataRecords(int UsersID{
-        ArtworkData[] Labels;
-        Labels = new ArtworkData[3];
-        return Labels;}
-         * 
-         */
 
         public Management()
         {
@@ -71,7 +65,7 @@ namespace ATMProject
 
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
         {
-            ATM atm = new ATM();
+            ATM atm = new ATM(ac);
             atm.Size = new Size(900, 600);
             atm.Show();
 
@@ -87,11 +81,7 @@ namespace ATMProject
             Close();
         }
     }
-    /**
-     *  ac[0] = new Account(300, 1111, 111111);
-            ac[1] = new Account(750, 2222, 222222);
-            ac[2] = new Account(3000, 3333, 333333);
-     */
+    // ACCOUNT CLASS.
     public class Account
     {
         //the attributes for the account
@@ -167,7 +157,7 @@ namespace ATMProject
 
 
 
-    // CODE TO REWORK:
+    // ATM code from console version, not really needed but can be used as a reference:
     /* 
     *      This is out main ATM class that preforms the actions outlined in the assigment hand out
     *      
