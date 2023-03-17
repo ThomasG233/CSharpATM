@@ -134,7 +134,6 @@ namespace ATMProject
             // View account balance.
             if(onAccountScreen)
             {
-                clearATMScreen();
 
             }
         }
