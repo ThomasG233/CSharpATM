@@ -13,9 +13,11 @@ namespace ATMProject
 {
     public partial class ATM : Form
     {
+        public static ATM instance;
         bool accNumberInserted = false;
         bool invalidDataPreviouslyEntered = false;
         bool onAccountScreen = false;
+        public static string currentActionLog = "";
 
         // Holds reference to accounts from Management.
         Account[] ac = null;
@@ -43,6 +45,7 @@ namespace ATMProject
         {
             ac = accounts;
             InitializeComponent();
+            instance = this;
             drawATM();
             displayInitialATMScreen();
         }
@@ -125,7 +128,7 @@ namespace ATMProject
             // Withdraw some cash
             if(onAccountScreen)
             {
-
+                showWithdrawalScreen();
             }
         }
 
@@ -134,7 +137,7 @@ namespace ATMProject
             // View account balance.
             if(onAccountScreen)
             {
-
+                clearATMScreen();
             }
         }
         public void BtnSideBottom_Click(object sender, EventArgs e)
@@ -194,6 +197,10 @@ namespace ATMProject
                 Close();
             }
         }
+        public static void logUpdate(string newLog)
+        {
+            Management.instance.rTxtAccessLog.AppendText(newLog);
+        }
         // Event handler for the enter button.
         public void BtnEnter_Click(object sender, EventArgs e)
         {
@@ -229,8 +236,11 @@ namespace ATMProject
                             // If the pin number is valid.
                             if (ac[i].checkPin(Convert.ToInt32(pinNumber)))
                             {
-                                // Account is valid, display account screen.
+                                // Account is valid, display account screen
                                 dataValidated = true;
+                                currentActionLog = "User signed in with account number: " + accountNumber + " and pin number:" + pinNumber + "\n";
+                                logUpdate(currentActionLog);
+                                currentActionLog = "";
                                 txtCardInputs.Hide();
                                 clearATMScreen();
                                 displayAccountOptionsScreen();
@@ -346,6 +356,10 @@ namespace ATMProject
                 lblError.SetBounds(110, 315, 500, 25);
                 Controls.Add(lblError);
                 lblError.BringToFront();
+                if(txtCardInputs.Visible == false)
+                {
+                    txtCardInputs.Visible = true;
+                }    
             }
 
             txtCardInputs.SetBounds(302, 375, 125, 100);

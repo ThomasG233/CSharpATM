@@ -15,9 +15,18 @@ namespace ATMProject
 {
     public partial class Management : Form
     {
-        
-        RichTextBox rTxtAccessLog = new RichTextBox();
+        public static Management instance;
+
+        public RichTextBox rTxtAccessLog = new RichTextBox();
+
         public Account[] ac = new Account[3];
+
+        public static void ThreadStart(Action method)
+        {
+            Thread t = new Thread(new ThreadStart(method));
+            t.Start();
+        }
+
 
         public Account[] AccountCreation()
         {
@@ -30,13 +39,8 @@ namespace ATMProject
         public Management()
         {
             InitializeComponent();
+            instance = this;
         }
-
-        public void addToAccessLog()
-        {
-
-        }
-        
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -56,21 +60,26 @@ namespace ATMProject
                 lblAccount[i].SetBounds(this.Width/2 - 100, 10 + (20 * (i + 1)), 300, 20);
                 Controls.Add(lblAccount[i]);
             }
-            
             rTxtAccessLog.SetBounds(10, 100, this.Width - 35, this.Height - 150);
             rTxtAccessLog.ReadOnly = true;
-
             Controls.Add(rTxtAccessLog);
         }
 
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
         {
-            ATM atm = new ATM(ac);
-            atm.Size = new Size(900, 600);
-            atm.Show();
+            ThreadStart(() => { createATM(); });
+            // ATM atm = new ATM(ac);
+            //atm.Size = new Size(900, 600);
+            //atm.Show();
 
         }
 
+        private void createATM()
+        {
+            ATM atm = new ATM(ac);
+            atm.Size = new Size(900, 600);
+            atm.Show();
+        }
         private void stripOptions_Click(object sender, EventArgs e)
         {
 
@@ -80,6 +89,12 @@ namespace ATMProject
         {
             Close();
         }
+        //object sender, EventArgs e
+        public static void addToAccessLog(string newlog)
+        {
+       //     rTxtAccessLog.AppendText(newlog);
+        }
+
     }
     // ACCOUNT CLASS.
     public class Account
