@@ -6,8 +6,9 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Windows.Forms;
+
 
 
 
@@ -21,12 +22,14 @@ namespace ATMProject
 
         public Account[] ac = new Account[3];
 
-        public static void ThreadStart(Action method)
-        {
-            Thread t = new Thread(new ThreadStart(method));
-            t.Start();
-        }
+        /* public static Thread ThreadStart(Action method) // adapted from https://stackoverflow.com/questions/10313185/dynamically-create-thread
+         {
+             Thread t = new Thread(new ThreadStart(method));
+             t.Start();
+             return method;
+         }*/
 
+        
 
         public Account[] AccountCreation()
         {
@@ -67,10 +70,11 @@ namespace ATMProject
 
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
         {
-            ThreadStart(() => { createATM(); });
-            // ATM atm = new ATM(ac);
-            //atm.Size = new Size(900, 600);
-            //atm.Show();
+            ThreadStart threadDelegate = new ThreadStart(createATM);
+            Thread newThread = new Thread(threadDelegate);
+            Application.Run(createATM);
+            //newThread.Start();
+           // newThread.Sleep(6000);
 
         }
 
