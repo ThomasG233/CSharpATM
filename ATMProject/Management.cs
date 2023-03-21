@@ -70,19 +70,17 @@ namespace ATMProject
 
         private void stripBtnCreateATM_Click(object sender, EventArgs e)
         {
-            ThreadStart threadDelegate = new ThreadStart(createATM);
-            Thread newThread = new Thread(threadDelegate);
-            Application.Run(createATM);
-            //newThread.Start();
-           // newThread.Sleep(6000);
+            ATM atm = new ATM(ac);
+            Thread newThread = new Thread(() => createATM(atm));
+            // createATM(atm);
+            newThread.Start();
 
         }
 
-        private void createATM()
+        private void createATM(ATM atm)
         {
-            ATM atm = new ATM(ac);
             atm.Size = new Size(900, 600);
-            atm.Show();
+            atm.ShowDialog();
         }
         private void stripOptions_Click(object sender, EventArgs e)
         {
@@ -96,7 +94,7 @@ namespace ATMProject
         //object sender, EventArgs e
         public static void addToAccessLog(string newlog)
         {
-       //     rTxtAccessLog.AppendText(newlog);
+            instance.rTxtAccessLog.AppendText(newlog);
         }
 
     }

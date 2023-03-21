@@ -13,12 +13,15 @@ namespace ATMProject
 {
     public partial class ATM : Form
     {
+        private delegate void SafeCallDelegate(string text);
+
         public static ATM instance;
         bool accNumberInserted = false;
         bool invalidDataPreviouslyEntered = false;
         bool onAccountScreen = false;
+        bool onWithdrawalScreen = false;
         public static string currentActionLog = "";
-
+        int accountIndex;
         // Holds reference to accounts from Management.
         Account[] ac = null;
 
@@ -27,7 +30,7 @@ namespace ATMProject
         String accountNumber = "";
         String pinNumber = "";
 
-        Button[] btnSideMenu = new Button[3];
+        Button[] btnSideMenu = new Button[5];
             
         // Basic constructor (required).
         public ATM()
@@ -95,10 +98,10 @@ namespace ATMProject
             btnKeyPad[2, 3].Click += new EventHandler(BtnEnter_Click);
 
             int j = 0;
-            for (int y = 0; y < 3; y++)
+            for (int y = 0; y < 5; y++)
             {
                 btnSideMenu[y] = new Button();
-                btnSideMenu[y].SetBounds(20, 125 + (125 * j), 50, 50);
+                btnSideMenu[y].SetBounds(20, 125 + (65 * j), 50, 50);
                 btnSideMenu[y].BackColor = Color.White;
                 btnSideMenu[y].Font = new Font("Arial", 20, FontStyle.Bold);
                 btnSideMenu[y].Text = "->";
@@ -106,9 +109,11 @@ namespace ATMProject
                 Controls.Add(btnSideMenu[y]);
             }
 
-            btnSideMenu[0].Click += new EventHandler(BtnSideTop_Click);
-            btnSideMenu[1].Click += new EventHandler(BtnSideMid_Click);
-            btnSideMenu[2].Click += new EventHandler(BtnSideBottom_Click);
+            btnSideMenu[0].Click += new EventHandler(BtnSideFirst_Click);
+            btnSideMenu[1].Click += new EventHandler(BtnSideSecond_Click);
+            btnSideMenu[2].Click += new EventHandler(BtnSideThird_Click);
+            btnSideMenu[3].Click += new EventHandler(BtnSideFourth_Click);
+            btnSideMenu[4].Click += new EventHandler(BtnSideFifth_Click);
 
             Panel pnlScreen = new Panel();
             pnlScreen.BackColor = Color.Black;
@@ -123,35 +128,94 @@ namespace ATMProject
             Controls.Add(pnlCardReader);
         }
 
-        public void BtnSideTop_Click(object sender, EventArgs e)
+        public void BtnSideFirst_Click(object sender, EventArgs e)
         {
             // Withdraw some cash
             if(onAccountScreen)
             {
+                clearATMScreen();
                 showWithdrawalScreen();
+            }
+            // Withdraw £10
+            if (onWithdrawalScreen)
+            {
+
+            }
+        }
+        public void BtnSideSecond_Click(object sender, EventArgs e)
+        {
+            // Withdraw £20
+            if(onWithdrawalScreen)
+            {
+                if (ac[accountIndex].getBalance() > 10)
+                {
+                    // ac[accountIndex]
+                }
             }
         }
 
-        public void BtnSideMid_Click(object sender, EventArgs e)
+        public void BtnSideThird_Click(object sender, EventArgs e)
         {
             // View account balance.
             if(onAccountScreen)
             {
                 clearATMScreen();
             }
-        }
-        public void BtnSideBottom_Click(object sender, EventArgs e)
-        {
-            // Remove card
-            if(onAccountScreen)
+            // Withdraw £40
+            else if(onWithdrawalScreen)
             {
 
             }
         }
 
+        public void BtnSideFourth_Click(object sender, EventArgs e)
+        {
+            // Withdraw £100
+            if (onWithdrawalScreen)
+            {
+                clearATMScreen();
+            }
+        }
+        public void BtnSideFifth_Click(object sender, EventArgs e)
+        {
+            // Remove card
+            if(onAccountScreen)
+            {
+                clearATMScreen();
+                Close();
+            }
+            // Withdraw £200
+            else if(onWithdrawalScreen)
+            {
+                
+            }
+        }
+
         public void showWithdrawalScreen()
         {
+            lblInstruction.Text = "How much should be withdrawn?";
+            lblInstruction.ForeColor = Color.Red;
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.SetBounds(110, 60, 500, 50);
+            Controls.Add(lblInstruction);
+            lblInstruction.BringToFront();
 
+            Label[] amounts = new Label[5];
+            for(int i = 0; i < 5; i++)
+            {
+                amounts[i] = new Label();
+                amounts[i].SetBounds(100, 130 + (65 * i), 200, 50);
+                amounts[i].BackColor = Color.Black;
+                amounts[i].ForeColor = Color.Salmon;
+                amounts[i].Font = new Font("Arial", 25, FontStyle.Bold);
+                Controls.Add(amounts[i]);
+                amounts[i].BringToFront();
+            }
+            amounts[0].Text = "£10";
+            amounts[1].Text = "£20";
+            amounts[2].Text = "£40";
+            amounts[3].Text = "£100";
+            amounts[4].Text = "£500";
         }
 
         public void showBalanceScreen()
@@ -197,9 +261,24 @@ namespace ATMProject
                 Close();
             }
         }
+
+        // referenced from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
+        public void logUpdateSafe(string newLog)
+        {
+            if(Management.instance.rTxtAccessLog.InvokeRequired)
+            {
+                var d = new SafeCallDelegate(logUpdateSafe);
+                Management.instance.rTxtAccessLog.Invoke(d, new object[] { newLog });
+            }
+            else
+            {
+                Management.instance.rTxtAccessLog.Text += newLog;
+            }
+        }
+
         public static void logUpdate(string newLog)
         {
-            Management.instance.rTxtAccessLog.AppendText(newLog);
+            Management.addToAccessLog(newLog);
         }
         // Event handler for the enter button.
         public void BtnEnter_Click(object sender, EventArgs e)
@@ -238,8 +317,9 @@ namespace ATMProject
                             {
                                 // Account is valid, display account screen
                                 dataValidated = true;
+                                accountIndex = i;
                                 currentActionLog = "User signed in with account number: " + accountNumber + " and pin number:" + pinNumber + "\n";
-                                logUpdate(currentActionLog);
+                                logUpdateSafe(currentActionLog);
                                 currentActionLog = "";
                                 txtCardInputs.Hide();
                                 clearATMScreen();
