@@ -168,10 +168,14 @@ namespace ATMProject
         {
             return accountNum;
         }
+
+        public Account updateBalance(int amount, int password, int account)
+        {
+            this.balance = amount;
+            this.pin = password;
+            this.accountNum = account;
+        }
     }
-
-
-
 
 
     // ATM code from console version, not really needed but can be used as a reference:

@@ -218,6 +218,28 @@ namespace ATMProject
             amounts[4].Text = "£500";
         }
 
+        public Account withdrawMethod(int withdrawlAmount)
+        {
+            if (ac[accountIndex]< withdrawlAmount)
+            {
+                //timer reference https://stackoverflow.com/questions/14015086/how-do-i-get-a-text-block-to-display-for-5-seconds
+                lblInstruction.Text = "Error, account balance too low!";
+                DispatcherTimer timer = new DispatcherTimer();
+                timer.Tick += {
+                    lblInstruction.Text = "How much should be withdrawn?";
+                    timer.Stop();
+                };
+                timer.Interval = TimeSpan.FromSeconds(4);
+                timer.Start();
+            }
+            else
+            {
+                int currentBalance = ac[accountIndex].getBalance();
+                ac[accountIndex].setBalance(currentBalance - withdrawlAmount);
+                return Account;
+            }
+        }
+
         public void showBalanceScreen()
         {
 
