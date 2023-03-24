@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Data;
 using System.Drawing;
 using System.Linq;
@@ -27,8 +28,8 @@ namespace ATMProject
 
         TextBox txtCardInputs = new TextBox();
         Label lblInstruction = new Label();
-        String accountNumber = "";
-        String pinNumber = "";
+        string accountNumber = "";
+        string pinNumber = "";
 
         Button[] btnSideMenu = new Button[5];
             
@@ -38,10 +39,6 @@ namespace ATMProject
             InitializeComponent();
             drawATM();
             displayInitialATMScreen();
-            // Thread th = Thread.CurrentThread;
-
-            // ThreadExceptionDialog thread1 = new Thread(increment);
-            // thread1.Start();
         }
         // Constructor to pass in accounts.
         public ATM(Account[] accounts)
@@ -128,6 +125,44 @@ namespace ATMProject
             Controls.Add(pnlCardReader);
         }
 
+        public void deductFromAccount(int amountToDeduct)
+        {
+            int accountBalance = ac[accountIndex].getBalance();
+            clearATMScreen();
+            if (accountBalance >= amountToDeduct)
+            {
+                accountBalance -= amountToDeduct;
+                ac[accountIndex].setBalance(accountBalance);
+                showDeductionScreen(amountToDeduct, true);
+                logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " has taken out £" + amountToDeduct + ", leaving £" + accountBalance + "\n");
+                updateAccountLabelSafe("Account " + ac[accountIndex].getAccountNum() + " currently has £" + ac[accountIndex].getBalance());
+            }
+            else
+            {
+                logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " tried to take out £" + amountToDeduct + ", but doesn't have enough in their account.\n");
+                showDeductionScreen(amountToDeduct, false);
+            }
+        }
+
+        public void showDeductionScreen(int amountToDeduct, bool validDeduction)
+        {
+            onWithdrawalScreen = false;
+            if (validDeduction)
+            {
+                lblInstruction.Text = "Withdrawing £" + amountToDeduct.ToString() + "...";
+            }
+            else
+            {
+                lblInstruction.Text = "Insufficient Funds.";
+            }
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.SetBounds(220, 225, 300, 50);
+            lblInstruction.ForeColor = Color.Red;
+            lblInstruction.TextAlign = ContentAlignment.MiddleCenter;
+            Controls.Add(lblInstruction);
+            lblInstruction.BringToFront();
+        }
+
         public void BtnSideFirst_Click(object sender, EventArgs e)
         {
             // Withdraw some cash
@@ -137,9 +172,9 @@ namespace ATMProject
                 showWithdrawalScreen();
             }
             // Withdraw £10
-            if (onWithdrawalScreen)
+            else if (onWithdrawalScreen)
             {
-
+                deductFromAccount(10);
             }
         }
         public void BtnSideSecond_Click(object sender, EventArgs e)
@@ -147,10 +182,7 @@ namespace ATMProject
             // Withdraw £20
             if(onWithdrawalScreen)
             {
-                if (ac[accountIndex].getBalance() > 10)
-                {
-                    // ac[accountIndex]
-                }
+                deductFromAccount(20);
             }
         }
 
@@ -160,11 +192,12 @@ namespace ATMProject
             if(onAccountScreen)
             {
                 clearATMScreen();
+                showBalanceScreen();
             }
             // Withdraw £40
             else if(onWithdrawalScreen)
             {
-
+                deductFromAccount(40);
             }
         }
 
@@ -173,7 +206,7 @@ namespace ATMProject
             // Withdraw £100
             if (onWithdrawalScreen)
             {
-                clearATMScreen();
+                deductFromAccount(100);
             }
         }
         public void BtnSideFifth_Click(object sender, EventArgs e)
@@ -182,17 +215,35 @@ namespace ATMProject
             if(onAccountScreen)
             {
                 clearATMScreen();
-                Close();
+                showReturnCardScreen();
             }
             // Withdraw £200
             else if(onWithdrawalScreen)
             {
-                
+                deductFromAccount(500);
             }
+        }
+        public void showReturnCardScreen()
+        {
+            onAccountScreen = false;
+            lblInstruction.Text = "Returning card. Goodbye!";
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.SetBounds(160, 225, 400, 50);
+            lblInstruction.ForeColor = Color.Red;
+            Controls.Add(lblInstruction);
+            lblInstruction.BringToFront();
+
+            Panel pnlCard = new Panel();
+            pnlCard.BackColor = Color.Red;
+            pnlCard.SetBounds(655, 415, 215, 5);
+            Controls.Add(pnlCard);
+
         }
 
         public void showWithdrawalScreen()
         {
+            onAccountScreen = false;
+            onWithdrawalScreen = true;
             lblInstruction.Text = "How much should be withdrawn?";
             lblInstruction.ForeColor = Color.Red;
             lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
@@ -218,31 +269,15 @@ namespace ATMProject
             amounts[4].Text = "£500";
         }
 
-        public Account withdrawMethod(int withdrawlAmount)
-        {
-            if (ac[accountIndex]< withdrawlAmount)
-            {
-                //timer reference https://stackoverflow.com/questions/14015086/how-do-i-get-a-text-block-to-display-for-5-seconds
-                lblInstruction.Text = "Error, account balance too low!";
-                DispatcherTimer timer = new DispatcherTimer();
-                timer.Tick += {
-                    lblInstruction.Text = "How much should be withdrawn?";
-                    timer.Stop();
-                };
-                timer.Interval = TimeSpan.FromSeconds(4);
-                timer.Start();
-            }
-            else
-            {
-                int currentBalance = ac[accountIndex].getBalance();
-                ac[accountIndex].setBalance(currentBalance - withdrawlAmount);
-                return Account;
-            }
-        }
-
         public void showBalanceScreen()
         {
-
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.Text = "Account Balance = £" + ac[accountIndex].getBalance();
+            lblInstruction.SetBounds(170, 225, 400, 50);
+            lblInstruction.ForeColor = Color.Red;
+            lblInstruction.TextAlign = ContentAlignment.MiddleCenter;
+            Controls.Add(lblInstruction);
+            lblInstruction.BringToFront();
         }
 
         private void ATM_Click1(object sender, EventArgs e)
@@ -261,27 +296,32 @@ namespace ATMProject
             // If an account number is currently being inserted.
             if ((txtCardInputs.Text).Length < 6 && !accNumberInserted)
             {
-                txtCardInputs.Text += Convert.ToString(((Button)sender).Text);
+                txtCardInputs.Text += ((Button)sender).Text;
             }
             // If a PIN is currently being inserted.
             else if ((txtCardInputs.Text).Length < 4 && accNumberInserted)
             {
-                txtCardInputs.Text += Convert.ToString(((Button)sender).Text);
+                pinNumber += ((Button)sender).Text;
+                txtCardInputs.Text += "*";
             }
         }
         // Event handler for the cancel button.
         public void BtnCancel_Click(object sender, EventArgs e)
         {
-            // Remove a number from the input box.
             if ((txtCardInputs.Text).Length > 0)
             {
                 txtCardInputs.Text = (txtCardInputs.Text).Remove((txtCardInputs.Text).Length - 1);
+                // Remove a number from the input box.
+                if (accNumberInserted)
+                {
+                    pinNumber = pinNumber.Remove(pinNumber.Length - 1);
+                }
+                else
+                {
+
+                }
             }
-            // Cancel, closes ATM system.
-            else if ((txtCardInputs.Text).Length == 0)
-            {
-                Close();
-            }
+            
         }
 
         // referenced from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
@@ -298,9 +338,17 @@ namespace ATMProject
             }
         }
 
-        public static void logUpdate(string newLog)
+        public void updateAccountLabelSafe(string newLbl)
         {
-            Management.addToAccessLog(newLog);
+            if (Management.instance.lblAccount[accountIndex].InvokeRequired)
+            {
+                var d = new SafeCallDelegate(updateAccountLabelSafe);
+                Management.instance.lblAccount[accountIndex].Invoke(d, new object[] { newLbl });
+            }
+            else
+            {
+                Management.instance.lblAccount[accountIndex].Text = newLbl;
+            }
         }
         // Event handler for the enter button.
         public void BtnEnter_Click(object sender, EventArgs e)
@@ -326,7 +374,6 @@ namespace ATMProject
                 if ((txtCardInputs.Text).Length == 4)
                 {
                     // Save the pin number.
-                    pinNumber = txtCardInputs.Text;
                     txtCardInputs.Text = "";
                     // Check each account on file.
                     for (int i = 0; i < 3; i++)
@@ -340,9 +387,8 @@ namespace ATMProject
                                 // Account is valid, display account screen
                                 dataValidated = true;
                                 accountIndex = i;
-                                currentActionLog = "User signed in with account number: " + accountNumber + " and pin number:" + pinNumber + "\n";
-                                logUpdateSafe(currentActionLog);
-                                currentActionLog = "";
+                                logUpdateSafe("User signed in with account number " + accountNumber + " and pin number " + pinNumber + "\n");
+                                txtCardInputs.Clear();
                                 txtCardInputs.Hide();
                                 clearATMScreen();
                                 displayAccountOptionsScreen();
@@ -365,7 +411,9 @@ namespace ATMProject
                     pinNumber = "";
                     // Prompt the user to re-enter.
                     clearATMScreen();
+                    txtCardInputs.Clear();
                     displayInitialATMScreen();
+
                 }
             }
         }
@@ -375,9 +423,9 @@ namespace ATMProject
             // Enables the side buttons.
             onAccountScreen = true;
             // Instruction Label.
-            lblInstruction.Text = "Welcome, " + accountNumber + ".";
+            lblInstruction.Text = "Please choose from the following menu items:";
             lblInstruction.ForeColor = Color.Red;
-            lblInstruction.Font = new Font("Arial", 30, FontStyle.Bold);
+            lblInstruction.Font = new Font("Arial", 15, FontStyle.Bold);
             lblInstruction.SetBounds(110, 60, 500, 50);
             Controls.Add(lblInstruction);
             lblInstruction.BringToFront();
@@ -389,7 +437,7 @@ namespace ATMProject
                 lblOptions[i] = new Label();
                 lblOptions[i].ForeColor = Color.Tomato;
                 lblOptions[i].BackColor = Color.Black;
-                lblOptions[i].SetBounds(100, 135 + (125 * i), 500, 30); ;
+                lblOptions[i].SetBounds(100, 135 + (130 * i), 500, 30); ;
                 lblOptions[i].Font = new Font("Arial", 20, FontStyle.Bold);
                 Controls.Add(lblOptions[i]);
                 lblOptions[i].BringToFront(); 

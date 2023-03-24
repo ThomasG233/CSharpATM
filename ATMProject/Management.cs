@@ -22,6 +22,8 @@ namespace ATMProject
 
         public Account[] ac = new Account[3];
 
+        public Label[] lblAccount = new Label[3];
+
         /* public static Thread ThreadStart(Action method) // adapted from https://stackoverflow.com/questions/10313185/dynamically-create-thread
          {
              Thread t = new Thread(new ThreadStart(method));
@@ -29,7 +31,7 @@ namespace ATMProject
              return method;
          }*/
 
-        
+
 
         public Account[] AccountCreation()
         {
@@ -53,7 +55,7 @@ namespace ATMProject
 
         public void drawManagementScreen()
         {
-            Label[] lblAccount = new Label[3];
+            
 
             for(int i = 0; i < 3; i++)
             {
@@ -74,7 +76,6 @@ namespace ATMProject
             Thread newThread = new Thread(() => createATM(atm));
             // createATM(atm);
             newThread.Start();
-
         }
 
         private void createATM(ATM atm)
@@ -91,11 +92,7 @@ namespace ATMProject
         {
             Close();
         }
-        //object sender, EventArgs e
-        public static void addToAccessLog(string newlog)
-        {
-            instance.rTxtAccessLog.AppendText(newlog);
-        }
+
 
     }
     // ACCOUNT CLASS.
@@ -168,14 +165,10 @@ namespace ATMProject
         {
             return accountNum;
         }
-
-        public Account updateBalance(int amount, int password, int account)
-        {
-            this.balance = amount;
-            this.pin = password;
-            this.accountNum = account;
-        }
     }
+
+
+
 
 
     // ATM code from console version, not really needed but can be used as a reference:
