@@ -125,42 +125,47 @@ namespace ATMProject
             Controls.Add(pnlCardReader);
         }
 
-        public void deductFromAccount(int amountToDeduct)
+        public bool deductFromAccount(int amountToDeduct)
         {
+            // Management.requests.WaitOne();
             int accountBalance = ac[accountIndex].getBalance();
-            clearATMScreen();
+            Thread.Sleep(3000);
             if (accountBalance >= amountToDeduct)
             {
                 accountBalance -= amountToDeduct;
                 ac[accountIndex].setBalance(accountBalance);
-                showDeductionScreen(amountToDeduct, true);
                 logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " has taken out £" + amountToDeduct + ", leaving £" + accountBalance + "\n");
                 updateAccountLabelSafe("Account " + ac[accountIndex].getAccountNum() + " currently has £" + ac[accountIndex].getBalance());
+                return true;
             }
             else
             {
-                logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " tried to take out £" + amountToDeduct + ", but doesn't have enough in their account.\n");
-                showDeductionScreen(amountToDeduct, false);
+                return false;
             }
         }
 
-        public void showDeductionScreen(int amountToDeduct, bool validDeduction)
+        public void showDeductionScreen(int amountToDeduct)
         {
-            onWithdrawalScreen = false;
-            if (validDeduction)
-            {
-                lblInstruction.Text = "Withdrawing £" + amountToDeduct.ToString() + "...";
-            }
-            else
-            {
-                lblInstruction.Text = "Insufficient Funds.";
-            }
+            clearATMScreen();
+            Controls.Add(lblInstruction);
+            lblInstruction.Text = "Withdrawing £" + amountToDeduct.ToString() + "...";
             lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
             lblInstruction.SetBounds(220, 225, 300, 50);
             lblInstruction.ForeColor = Color.Red;
-            lblInstruction.TextAlign = ContentAlignment.MiddleCenter;
-            Controls.Add(lblInstruction);
+            lblInstruction.TextAlign = ContentAlignment.MiddleCenter;        
             lblInstruction.BringToFront();
+            lblInstruction.Refresh();
+            bool validDeduction = deductFromAccount(amountToDeduct);
+            onWithdrawalScreen = false;
+            if (!validDeduction)
+            {
+                lblInstruction.Text = "Insufficient Funds.";
+                lblInstruction.Refresh();
+                logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " tried to take out £" + amountToDeduct + ", but doesn't have enough in their account.\n");
+                Thread.Sleep(3000);
+            }
+            clearATMScreen();
+            displayAccountOptionsScreen();
         }
 
         public void BtnSideFirst_Click(object sender, EventArgs e)
@@ -174,7 +179,7 @@ namespace ATMProject
             // Withdraw £10
             else if (onWithdrawalScreen)
             {
-                deductFromAccount(10);
+                showDeductionScreen(10);
             }
         }
         public void BtnSideSecond_Click(object sender, EventArgs e)
@@ -182,7 +187,7 @@ namespace ATMProject
             // Withdraw £20
             if(onWithdrawalScreen)
             {
-                deductFromAccount(20);
+                showDeductionScreen(20);
             }
         }
 
@@ -193,6 +198,7 @@ namespace ATMProject
             {
                 clearATMScreen();
                 showBalanceScreen();
+                displayAccountOptionsScreen();
             }
             // Withdraw £40
             else if(onWithdrawalScreen)
@@ -206,7 +212,7 @@ namespace ATMProject
             // Withdraw £100
             if (onWithdrawalScreen)
             {
-                deductFromAccount(100);
+                showDeductionScreen(100);
             }
         }
         public void BtnSideFifth_Click(object sender, EventArgs e)
@@ -216,11 +222,13 @@ namespace ATMProject
             {
                 clearATMScreen();
                 showReturnCardScreen();
+                Thread.Sleep(3000);
+                Close();
             }
             // Withdraw £200
             else if(onWithdrawalScreen)
             {
-                deductFromAccount(500);
+                showDeductionScreen(500);
             }
         }
         public void showReturnCardScreen()
@@ -232,13 +240,36 @@ namespace ATMProject
             lblInstruction.ForeColor = Color.Red;
             Controls.Add(lblInstruction);
             lblInstruction.BringToFront();
+            lblInstruction.Refresh();
 
             Panel pnlCard = new Panel();
             pnlCard.BackColor = Color.Red;
             pnlCard.SetBounds(655, 415, 215, 5);
             Controls.Add(pnlCard);
-
         }
+        /*
+        public Account withdrawMethod(int withdrawlAmount)
+        {
+            if (ac[accountIndex].getBalance() < withdrawlAmount)
+            {
+                //timer reference https://stackoverflow.com/questions/14015086/how-do-i-get-a-text-block-to-display-for-5-seconds
+                lblInstruction.Text = "Error, account balance too low!";
+                DispatcherTimer timer = new DispatcherTimer();
+                timer.Tick += {
+                    lblInstruction.Text = "How much should be withdrawn?";
+                    timer.Stop();
+                };
+                timer.Interval = TimeSpan.FromSeconds(4);
+                timer.Start();
+            }
+            else
+            {
+                int currentBalance = ac[accountIndex].getBalance();
+                ac[accountIndex].setBalance(currentBalance - withdrawlAmount);
+                return Account;
+            }
+        }
+        */
 
         public void showWithdrawalScreen()
         {
@@ -278,6 +309,9 @@ namespace ATMProject
             lblInstruction.TextAlign = ContentAlignment.MiddleCenter;
             Controls.Add(lblInstruction);
             lblInstruction.BringToFront();
+            lblInstruction.Refresh();
+            Thread.Sleep(3000);
+            
         }
 
         private void ATM_Click1(object sender, EventArgs e)
