@@ -31,7 +31,7 @@ namespace ATMProject
         {
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.stripBtnCreateATM = new System.Windows.Forms.ToolStripMenuItem();
-            this.stripOptions = new System.Windows.Forms.ToolStripMenuItem();
+            this.toggleConditionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.stripExit = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -40,7 +40,7 @@ namespace ATMProject
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.stripBtnCreateATM,
-            this.stripOptions,
+            this.toggleConditionToolStripMenuItem,
             this.stripExit});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -55,12 +55,12 @@ namespace ATMProject
             this.stripBtnCreateATM.Text = "Create ATM";
             this.stripBtnCreateATM.Click += new System.EventHandler(this.stripBtnCreateATM_Click);
             // 
-            // stripOptions
+            // toggleConditionToolStripMenuItem
             // 
-            this.stripOptions.Name = "stripOptions";
-            this.stripOptions.Size = new System.Drawing.Size(61, 20);
-            this.stripOptions.Text = "Options";
-            this.stripOptions.Click += new System.EventHandler(this.stripOptions_Click);
+            this.toggleConditionToolStripMenuItem.Name = "toggleConditionToolStripMenuItem";
+            this.toggleConditionToolStripMenuItem.Size = new System.Drawing.Size(138, 20);
+            this.toggleConditionToolStripMenuItem.Text = "Toggle Race Condition";
+            this.toggleConditionToolStripMenuItem.Click += new System.EventHandler(this.toggleConditionToolStripMenuItem_Click);
             // 
             // stripExit
             // 
@@ -69,14 +69,14 @@ namespace ATMProject
             this.stripExit.Text = "Exit";
             this.stripExit.Click += new System.EventHandler(this.stripExit_Click);
             // 
-            // Form1
+            // Management
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(460, 450);
             this.Controls.Add(this.menuStrip1);
             this.MainMenuStrip = this.menuStrip1;
-            this.Name = "Form1";
+            this.Name = "Management";
             this.Text = "Account Management System";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.menuStrip1.ResumeLayout(false);
@@ -89,9 +89,9 @@ namespace ATMProject
         #endregion
 
         private System.Windows.Forms.MenuStrip menuStrip1;
-        private System.Windows.Forms.ToolStripMenuItem stripOptions;
         private System.Windows.Forms.ToolStripMenuItem stripBtnCreateATM;
         private System.Windows.Forms.ToolStripMenuItem stripExit;
+        private System.Windows.Forms.ToolStripMenuItem toggleConditionToolStripMenuItem;
     }
 }
 

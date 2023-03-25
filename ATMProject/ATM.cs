@@ -127,19 +127,34 @@ namespace ATMProject
 
         public bool deductFromAccount(int amountToDeduct)
         {
-            // Management.requests.WaitOne();
-            int accountBalance = ac[accountIndex].getBalance();
+            int accountBalance = 0;
+            if (Management.instance.raceCondition == false)
+            {
+                Management.requests.WaitOne();
+            }
+
+            accountBalance = ac[accountIndex].getBalance();
             Thread.Sleep(3000);
+                      
+
             if (accountBalance >= amountToDeduct)
             {
                 accountBalance -= amountToDeduct;
                 ac[accountIndex].setBalance(accountBalance);
                 logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " has taken out £" + amountToDeduct + ", leaving £" + accountBalance + "\n");
                 updateAccountLabelSafe("Account " + ac[accountIndex].getAccountNum() + " currently has £" + ac[accountIndex].getBalance());
+                if (Management.instance.raceCondition == false)
+                {
+                    Management.requests.ReleaseMutex();
+                }
                 return true;
             }
             else
             {
+                if (Management.instance.raceCondition == false)
+                {
+                    Management.requests.ReleaseMutex();
+                }
                 return false;
             }
         }

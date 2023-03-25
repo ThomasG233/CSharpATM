@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Resources;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,7 +22,9 @@ namespace ATMProject
 
         public Label[] lblAccount = new Label[3];
 
-        // public static Semaphore requests;
+        public bool raceCondition = true;
+
+        public static Mutex requests;
 
         /* public static Thread ThreadStart(Action method) // adapted from https://stackoverflow.com/questions/10313185/dynamically-create-thread
          {
@@ -36,14 +39,14 @@ namespace ATMProject
             ac[0] = new Account(300, 1111, 111111);
             ac[1] = new Account(750, 2222, 222222);
             ac[2] = new Account(3000, 3333, 333333);
-            // requests = new Semaphore(initialCount: 0, maximumCount: 2);
-            // requests.Release(releaseCount: 2);
+            requests = new Mutex();
             instance = this;
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             drawManagementScreen();
+            rTxtAccessLog.Text = "Race Condition Enabled!\n";
         }
 
         public void drawManagementScreen()
@@ -84,7 +87,21 @@ namespace ATMProject
             Close();
         }
 
+        private void toggleConditionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
+            if(raceCondition == false)
+            {
+                rTxtAccessLog.Text += "Race Condition Enabled!\n";
+                raceCondition = true;
+            }
+            else
+            {
+                rTxtAccessLog.Text += "Race Condition Disabled!\n";
+                raceCondition = false;
+            }
 
+        }
     }
     // ACCOUNT CLASS.
     public class Account
