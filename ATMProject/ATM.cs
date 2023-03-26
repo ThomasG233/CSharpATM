@@ -26,6 +26,7 @@ namespace ATMProject
         bool invalidDataPreviouslyEntered = false;
         bool onAccountScreen = false;
         bool onWithdrawalScreen = false;
+        bool onDepositScreen = false;
 
         // Account Index of the account being logged into.
         int accountIndex;
@@ -60,6 +61,8 @@ namespace ATMProject
             drawATM();
             instance = this;
             displayInitialATMScreen();
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
         }
 
         // Constructor to pass in accounts.
@@ -71,6 +74,8 @@ namespace ATMProject
             instance = this;
             drawATM();
             displayInitialATMScreen();
+            this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
         }
 
         // Draw the ATM UI.
@@ -187,9 +192,44 @@ namespace ATMProject
                 return false;
             }
         }
+
+        // Remove an amount from the account.
+        public void addToAccount(int amountToAdd)
+        {
+            Panel pnlMoney = new Panel();
+            pnlMoney.BackColor = Color.LimeGreen;
+            pnlMoney.SetBounds(655, 415, 215, 5);
+            Controls.Add(pnlMoney);
+            int accountBalance = 0;
+            // Race condition results in no Mutex being used.
+            if (Management.instance.raceCondition == false)
+            {
+                // Thread pauses until the account is not being accessed.
+                ac[accountIndex].requests.WaitOne();
+            }
+            // When available for access, creates a local copy of account balance.
+            accountBalance = ac[accountIndex].getBalance();
+            // Pause created for race condition, given 5 seconds to simulate.
+            Thread.Sleep(5000);
+
+            accountBalance += amountToAdd;
+            // Update bank computer with new amount, adding to log.
+            ac[accountIndex].setBalance(accountBalance);
+            logUpdateSafe("User with account number " + ac[accountIndex].getAccountNum() + " has added £" + amountToAdd + ", now at £" + accountBalance + "\n");
+            updateAccountLabelSafe("Account " + ac[accountIndex].getAccountNum() + " currently has £" + ac[accountIndex].getBalance());
+
+            if (Management.instance.raceCondition == false)
+            {
+                // Free up the Mutex for other threads to access the account.
+                ac[accountIndex].requests.ReleaseMutex();
+            }
+            Controls.Remove(pnlMoney);
+        }
+
         // Display the UI for removing money.
         public void showDeductionScreen(int amountToDeduct)
         {
+            onDepositScreen = false;
             clearATMScreen();
             Controls.Add(lblInstruction);
             // Informs the user that money is being removed.
@@ -224,6 +264,29 @@ namespace ATMProject
             displayAccountOptionsScreen();
         }
 
+        // Display the UI for removing money.
+        public void showAdditionScreen(int amountToAdd)
+        {
+            onDepositScreen = false;
+            clearATMScreen();
+            Controls.Add(lblInstruction);
+            // Informs the user that money is being removed.
+            lblInstruction.Text = "Depositing £" + amountToAdd.ToString() + "...";
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.SetBounds(220, 225, 300, 50);
+            lblInstruction.ForeColor = Color.Red;
+            lblInstruction.TextAlign = ContentAlignment.MiddleCenter;
+            lblInstruction.BringToFront();
+            lblInstruction.Refresh();
+            // Add the money into the account.
+            addToAccount(amountToAdd);
+            
+            clearATMScreen();
+            whirr.Play();
+            displayAccountOptionsScreen();
+        }
+
+
         public void BtnSideFirst_Click(object sender, EventArgs e)
         {
             // Selects option to withdraw some cash
@@ -237,13 +300,27 @@ namespace ATMProject
             {
                 showDeductionScreen(10);
             }
+            else if(onDepositScreen)
+            {
+                showAdditionScreen(10);
+            }
         }
         public void BtnSideSecond_Click(object sender, EventArgs e)
         {
+            if (onAccountScreen)
+            {
+                clearATMScreen();
+                showDepositScreen();
+            }
             // Withdraw £20 from an account.
-            if(onWithdrawalScreen)
+            else if (onWithdrawalScreen)
             {
                 showDeductionScreen(20);
+            }
+            // Add £20 to the account.
+            else if (onDepositScreen)
+            {
+                showAdditionScreen(20);
             }
         }
 
@@ -261,6 +338,11 @@ namespace ATMProject
             {
                 deductFromAccount(40);
             }
+            // Add £40 to the account.
+            else if (onDepositScreen)
+            {
+                showAdditionScreen(40);
+            }
         }
 
         public void BtnSideFourth_Click(object sender, EventArgs e)
@@ -269,6 +351,10 @@ namespace ATMProject
             if (onWithdrawalScreen)
             {
                 showDeductionScreen(100);
+            }
+            else if (onDepositScreen)
+            {
+                showAdditionScreen(100);
             }
         }
         public void BtnSideFifth_Click(object sender, EventArgs e)
@@ -282,10 +368,14 @@ namespace ATMProject
                 Thread.Sleep(3000);
                 Close();
             }
-            // Withdraw £200 from an account.
+            // Withdraw £500 from an account.
             else if (onWithdrawalScreen)
             {
                 showDeductionScreen(500);
+            }
+            else if (onDepositScreen)
+            {
+                showAdditionScreen(500);
             }
         }
         // Display UI for a card removed.
@@ -340,9 +430,45 @@ namespace ATMProject
             amounts[3].Text = "£100";
             amounts[4].Text = "£500";
         }
+
+        // Display UI for the deposit screen.
+        public void showDepositScreen()
+        {
+            // No longer on account screen.
+            onAccountScreen = false;
+            onDepositScreen = true;
+            lblInstruction.Text = "How much are you inserting?";
+            lblInstruction.ForeColor = Color.Red;
+            lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
+            lblInstruction.SetBounds(110, 60, 500, 50);
+            Controls.Add(lblInstruction);
+            lblInstruction.BringToFront();
+
+            // Amounts which can be added into the account.
+            Label[] amounts = new Label[5];
+            for (int i = 0; i < 5; i++)
+            {
+                amounts[i] = new Label();
+                amounts[i].SetBounds(100, 130 + (65 * i), 200, 50);
+                amounts[i].BackColor = Color.Black;
+                amounts[i].ForeColor = Color.Salmon;
+                amounts[i].Font = new Font("Arial", 25, FontStyle.Bold);
+                Controls.Add(amounts[i]);
+                amounts[i].BringToFront();
+            }
+            // Displays amounts.
+            amounts[0].Text = "£10";
+            amounts[1].Text = "£20";
+            amounts[2].Text = "£40";
+            amounts[3].Text = "£100";
+            amounts[4].Text = "£500";
+
+        }
+
         // Displays UI for the balance screen.
         public void showBalanceScreen()
         {
+            onAccountScreen = false;
             // Displays balance to user.
             lblInstruction.Font = new Font("Arial", 20, FontStyle.Bold);
             lblInstruction.Text = "Account Balance = £" + ac[accountIndex].getBalance();
@@ -354,7 +480,6 @@ namespace ATMProject
             lblInstruction.Refresh();
             // Gives 3 seconds to read the amount.
             Thread.Sleep(3000);
-            
         }
         // Displays the Welcome screen for a user.
         public void showWelcomeScreen()
@@ -379,37 +504,68 @@ namespace ATMProject
         // Event handler for when a number on the keypad is pressed.
         public void BtnKeyPad_Click(object sender, EventArgs e)
         {
-            // If an account number is currently being inserted.
-            if ((txtCardInputs.Text).Length < 6 && !accNumberInserted)
+            if(!onAccountScreen && !onDepositScreen && !onWithdrawalScreen)
             {
-                txtCardInputs.Text += ((Button)sender).Text;
+                // If an account number is currently being inserted.
+                if ((txtCardInputs.Text).Length < 6 && !accNumberInserted)
+                {
+                    txtCardInputs.Text += ((Button)sender).Text;
+                    keypad.Play();
+                }
+                // If a PIN is currently being inserted.
+                else if ((txtCardInputs.Text).Length < 4 && accNumberInserted)
+                {
+                    pinNumber += ((Button)sender).Text;
+                    txtCardInputs.Text += "*";
+                    keypad.Play();
+                }
+
             }
-            // If a PIN is currently being inserted.
-            else if ((txtCardInputs.Text).Length < 4 && accNumberInserted)
-            {
-                pinNumber += ((Button)sender).Text;
-                txtCardInputs.Text += "*";
-            }
-            keypad.Play();
+            
         }
         // Event handler for the cancel button.
         public void BtnCancel_Click(object sender, EventArgs e)
         {
-            // Must have something entered to do a removal.
-            if ((txtCardInputs.Text).Length > 0)
-            {
-                txtCardInputs.Text = (txtCardInputs.Text).Remove((txtCardInputs.Text).Length - 1);
-                // Remove a number from the input box.
-                if (accNumberInserted)
+            if (!onAccountScreen && !onWithdrawalScreen && !onDepositScreen)
+            {     
+                // Must have something entered to do a removal.
+                if ((txtCardInputs.Text).Length > 0)
                 {
-                    // Remove last entered pin char.
-                    pinNumber = pinNumber.Remove(pinNumber.Length - 1);
+                    txtCardInputs.Text = (txtCardInputs.Text).Remove((txtCardInputs.Text).Length - 1);
+                    // Remove a number from the input box.
+                    if (accNumberInserted)
+                    {
+                        // Remove last entered pin char.
+                        pinNumber = pinNumber.Remove(pinNumber.Length - 1);
+                    }
                 }
             }
-            
+            else if(onAccountScreen)
+            {
+                clearATMScreen();
+                showReturnCardScreen();
+                // Takes 3 seconds to remove card.
+                Thread.Sleep(3000);
+                Close();
+            }
+            else if(onDepositScreen)
+            {
+                onDepositScreen = false;
+                clearATMScreen();
+                displayAccountOptionsScreen();
+                confirm.Play();
+            }
+            else if(onWithdrawalScreen)
+            {
+                onWithdrawalScreen = false;
+                clearATMScreen();
+                displayAccountOptionsScreen();
+                confirm.Play();
+            }
+           
         }
 
-        // microsoft documentation referenced from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
+        // Microsoft documentation referenced, from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
         public void logUpdateSafe(string newLog)
         {
             // Mandatory check before text can be added.
@@ -427,7 +583,7 @@ namespace ATMProject
                 Management.instance.rTxtAccessLog.Text += newLog;
             }
         }
-        // microsoft documentation referenced from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
+        // Microsoft documentation referenced, from https://learn.microsoft.com/en-gb/dotnet/desktop/winforms/controls/how-to-make-thread-safe-calls-to-windows-forms-controls?view=netframeworkdesktop-4.8
         public void updateAccountLabelSafe(string newLbl)
         {
             // Mandatory check before text can be added.
@@ -464,7 +620,7 @@ namespace ATMProject
                 }
             }
             // Pin Number is being inserted.
-            else if(accNumberInserted && !onAccountScreen && !onWithdrawalScreen)
+            else if(accNumberInserted && !onAccountScreen && !onWithdrawalScreen && !onDepositScreen)
             {
                 bool dataValidated = false;
                 // Pin number must be 4 numbers.
@@ -522,6 +678,8 @@ namespace ATMProject
         // Screen for Account Options.
         public void displayAccountOptionsScreen()
         {
+            onDepositScreen = false;
+            onWithdrawalScreen = false;
             // Enables the side buttons.
             onAccountScreen = true;
             // Instruction Label.
@@ -533,14 +691,17 @@ namespace ATMProject
             lblInstruction.BringToFront();
 
             // Menu options.
-            Label[] lblOptions = new Label[3];
-            for (int i = 0; i < 3; i++)
+            Label[] lblOptions = new Label[4];
+            for (int i = 0; i < 4; i++)
             {
                 // Set all label properties.
                 lblOptions[i] = new Label();
                 lblOptions[i].ForeColor = Color.Tomato;
                 lblOptions[i].BackColor = Color.Black;
-                lblOptions[i].SetBounds(100, 135 + (130 * i), 500, 30); ;
+                if (i != 3)
+                {
+                    lblOptions[i].SetBounds(100, 135 + (130 * i), 500, 30);
+                }
                 lblOptions[i].Font = new Font("Arial", 20, FontStyle.Bold);
                 Controls.Add(lblOptions[i]);
                 lblOptions[i].BringToFront(); 
@@ -549,6 +710,9 @@ namespace ATMProject
             lblOptions[0].Text = "Withdraw some cash.";
             lblOptions[1].Text = "Check your total balance.";
             lblOptions[2].Text = "Remove card.";
+
+            lblOptions[3].Text = "Deposit some cash.";
+            lblOptions[3].SetBounds(100, 200, 500, 30);
         }
         // Clear the ATM screen.
         public void clearATMScreen()

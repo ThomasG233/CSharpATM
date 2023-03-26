@@ -73,7 +73,7 @@ namespace ATMProject
         private void createATM(ATM atm)
         {
             // Display a new ATM.
-            atm.Size = new Size(900, 600);
+            atm.Size = new Size(900, 550);
             atm.ShowDialog();
         }
 
